@@ -8,7 +8,6 @@ app.config["MONGO_URI"] = "mongodb://localhost:27017/library"
 mongo = PyMongo(app)
 CORS(app)
 
-
 @app.route('/books', methods=['GET'])
 def get_books():
     books = mongo.db.books.find()
@@ -35,13 +34,17 @@ def add_book():
 def update_book(id):
     data = request.json
     print(f"Updating book with ID: {id}, Data: {data}")
-    mongo.db.books.update_one({'_id': ObjectId(id)}, {'$set': data})
+    result = mongo.db.books.update_one({'_id': ObjectId(id)}, {'$set': data})
+    if result.matched_count == 0:
+        return jsonify({'error': 'Book not found'}), 404
     return jsonify({'msg': 'Book updated'}), 200
 
 @app.route('/books/<id>', methods=['DELETE'])
 def delete_book(id):
     print(f"Deleting book with ID: {id}")
-    mongo.db.books.delete_one({'_id': ObjectId(id)})
+    result = mongo.db.books.delete_one({'_id': ObjectId(id)})
+    if result.deleted_count == 0:
+        return jsonify({'error': 'Book not found'}), 404
     return jsonify({'msg': 'Book deleted'}), 200
 
 if __name__ == '__main__':

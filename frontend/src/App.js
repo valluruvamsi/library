@@ -1,81 +1,102 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import './App.css';
 
-function App() {
+const API_URL = 'http://localhost:5000';
+
+const App = () => {
   const [books, setBooks] = useState([]);
   const [title, setTitle] = useState('');
   const [author, setAuthor] = useState('');
+  const [editingBook, setEditingBook] = useState(null);
 
   useEffect(() => {
     fetchBooks();
   }, []);
 
-  const fetchBooks = () => {
-    axios.get('http://localhost:5000/books')
-      .then(response => {
-        setBooks(response.data);
-      })
-      .catch(error => {
-        console.error('There was an error fetching the books!', error);
-      });
+  const fetchBooks = async () => {
+    try {
+      const response = await axios.get(`${API_URL}/books`);
+      setBooks(response.data);
+    } catch (error) {
+      console.error("There was an error fetching the books!", error);
+    }
   };
 
-  const addBook = () => {
-    console.log("Adding book with title:", title, "and author:", author);
-    axios.post('http://localhost:5000/books', { title, author })
-      .then(response => {
-        console.log("Response from server:", response);
-        fetchBooks();
-        setTitle('');
-        setAuthor('');
-      })
-      .catch(error => {
-        console.error('There was an error adding the book!', error);
-      });
+  const handleAddBook = async () => {
+    try {
+      if (editingBook) {
+        await axios.put(`${API_URL}/books/${editingBook._id}`, { title, author });
+        setEditingBook(null);
+      } else {
+        await axios.post(`${API_URL}/books`, { title, author });
+      }
+      setTitle('');
+      setAuthor('');
+      fetchBooks();
+    } catch (error) {
+      console.error("There was an error adding the book!", error);
+    }
   };
 
-  const deleteBook = (id) => {
-    axios.delete(`http://localhost:5000/books/${id}`)
-      .then(response => {
-        fetchBooks();
-      })
-      .catch(error => {
-        console.error('There was an error deleting the book!', error);
-      });
+  const handleEditBook = (book) => {
+    setEditingBook(book);
+    setTitle(book.title);
+    setAuthor(book.author);
+  };
+
+  const handleDeleteBook = async (id) => {
+    try {
+      await axios.delete(`${API_URL}/books/${id}`);
+      fetchBooks();
+    } catch (error) {
+      console.error("There was an error deleting the book!", error);
+    }
   };
 
   return (
     <div className="App">
-      <header className="App-header">
-        <h1>Welcome to the Library </h1>
-        <p>Manage your library efficiently and effectively.</p>
-        <div>
-          <input
-            type="text"
-            placeholder="Book Title"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-          />
-          <input
-            type="text"
-            placeholder="Author"
-            value={author}
-            onChange={(e) => setAuthor(e.target.value)}
-          />
-          <button className="cta-button" onClick={addBook}>Add Book</button>
-        </div>
-        <ul>
-          {books.map(book => (
-            <li key={book._id}>
-              {book.title} by {book.author}
-              <button onClick={() => deleteBook(book._id)}>Delete</button>
-            </li>
+      <h1>Library Management System</h1>
+      <div className="form-container">
+        <input 
+          type="text" 
+          placeholder="Title" 
+          value={title} 
+          onChange={(e) => setTitle(e.target.value)} 
+        />
+        <input 
+          type="text" 
+          placeholder="Author" 
+          value={author} 
+          onChange={(e) => setAuthor(e.target.value)} 
+        />
+        <button onClick={handleAddBook}>
+          {editingBook ? 'Update Book' : 'Add Book'}
+        </button>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>Title</th>
+            <th>Author</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {books.map((book) => (
+            <tr key={book._id}>
+              <td>{book.title}</td>
+              <td>{book.author}</td>
+              <td>
+                <button onClick={() => handleEditBook(book)}>Edit</button>
+                <button onClick={() => handleDeleteBook(book._id)}>Delete</button>
+              </td>
+            </tr>
           ))}
-        </ul>
-      </header>
+        </tbody>
+      </table>
     </div>
   );
-}
+};
 
 export default App;
