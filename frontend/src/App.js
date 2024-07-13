@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import './App.css';
-
-const API_URL = 'http://localhost:5000';
+import client from './client';
 
 const App = () => {
   const [books, setBooks] = useState([]);
@@ -16,7 +15,7 @@ const App = () => {
 
   const fetchBooks = async () => {
     try {
-      const response = await axios.get(`${API_URL}/books`);
+      const response = await client.get(`/books`);
       setBooks(response.data);
     } catch (error) {
       console.error("There was an error fetching the books!", error);
@@ -26,10 +25,10 @@ const App = () => {
   const handleAddBook = async () => {
     try {
       if (editingBook) {
-        await axios.put(`${API_URL}/books/${editingBook._id}`, { title, author });
+        await client.put(`/books/${editingBook._id}`, { title, author });
         setEditingBook(null);
       } else {
-        await axios.post(`${API_URL}/books`, { title, author });
+        await client.post(`/books`, { title, author });
       }
       setTitle('');
       setAuthor('');
@@ -47,7 +46,7 @@ const App = () => {
 
   const handleDeleteBook = async (id) => {
     try {
-      await axios.delete(`${API_URL}/books/${id}`);
+      await axios.delete(`/books/${id}`);
       fetchBooks();
     } catch (error) {
       console.error("There was an error deleting the book!", error);

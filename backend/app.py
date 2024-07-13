@@ -6,7 +6,10 @@ from flask_cors import CORS
 app = Flask(__name__)
 app.config["MONGO_URI"] = "mongodb://localhost:27017/library"
 mongo = PyMongo(app)
-CORS(app)
+CORS(app, resources={r"/*": {"origins": [
+    "http://localhost:3000",  # Allow requests from localhost:3000
+    # Allow requests from 127.0.0.1:3000  # Allow requests from yourdomain.com:8080
+]}})
 
 @app.route('/books', methods=['GET'])
 def get_books():
@@ -48,4 +51,4 @@ def delete_book(id):
     return jsonify({'msg': 'Book deleted'}), 200
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True, port=8080)
